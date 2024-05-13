@@ -8,14 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var products = []models.Product{
-	{ID: 1, Name: "Cabe", Price: 62000, Stock: 120},
-	{ID: 2, Name: "Daging ayam", Price: 25000, Stock: 150},
-	{ID: 3, Name: "Gula", Price: 20000, Stock: 200},
-}
-
 // menampilkan semua produk
 func GetAllProducts(c *fiber.Ctx) error {
+	products := models.SelectAllProduct()
 	return c.JSON(products)
 }
 
@@ -24,17 +19,18 @@ func GetProductById(c *fiber.Ctx) error {
 	paramID := c.Params("id")
 	id, _ := strconv.Atoi(paramID)
 
-	var foundProduct models.Product
-	for _, p := range products {
-		if p.ID == id {
-			foundProduct = p
-			break
-		}
+	foundProduct := models.SelectProductByID(id)
+
+	if foundProduct == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Product not found",
+		})
 	}
+
 	return c.JSON(foundProduct)
 }
 
-// menambahkan produk
+// // menambahkan produk
 func CreateProduct(c *fiber.Ctx) error {
 	var newProduct models.Product
 	if err := c.BodyParser(&newProduct); err != nil {
@@ -44,18 +40,15 @@ func CreateProduct(c *fiber.Ctx) error {
 		return err
 	}
 
-	newProduct.ID = len(products) + 1
-
-	products = append(products, newProduct)
+	models.PostProduct(&newProduct)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Product created successfully",
-		"product": newProduct,
 	})
 
 }
 
-// memperbaharui data produk
+// // memperbaharui data produk
 func UpdateProduct(c *fiber.Ctx) error {
 	id, _ := strconv.Atoi(c.Params("id"))
 
@@ -67,16 +60,9 @@ func UpdateProduct(c *fiber.Ctx) error {
 		return err
 	}
 
-	var foundIndex int = -1
-	for i, p := range products {
-		if p.ID == id {
-			foundIndex = i
-			break
-		}
-	}
+	err := models.UpdateProduct(id, &updateProduct)
 
-	if foundIndex != -1 {
-		products[foundIndex] = updateProduct
+	if err == nil {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"message": fmt.Sprintf("Product with ID %d update successfully", id),
 			"product": updateProduct,
@@ -88,22 +74,14 @@ func UpdateProduct(c *fiber.Ctx) error {
 	}
 }
 
-// delete product
+// // delete product
 func DeleteProduct(c *fiber.Ctx) error {
 
 	id, _ := strconv.Atoi(c.Params("id"))
 
-	var foundIndex int = -1
-	for i, p := range products {
-		if p.ID == id {
-			foundIndex = i
-			break
-		}
-	}
+	err := models.DeleteProduct(id)
 
-	if foundIndex != -1 {
-
-		products = append(products[:foundIndex], products[foundIndex+1:]...)
+	if err == nil {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"message": fmt.Sprintf("Product with ID %d deleted successfully", id),
 		})
