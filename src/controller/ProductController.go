@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gofiber_pijar/src/helpers"
 	"gofiber_pijar/src/models"
+	"math"
 	"strconv"
 	"strings"
 
@@ -13,21 +14,51 @@ import (
 
 // menampilkan semua produk
 func GetAllProducts(c *fiber.Ctx) error {
-	sort := c.Query("sorting")
+
+	//pagination
+	pageParam := c.Query("page")
+	limitParam := c.Query("limit")
+
+	page, _ := strconv.Atoi(pageParam)
+	if page == 0 {
+		page = 1
+	}
+
+	limit, _ := strconv.Atoi(limitParam)
+	if limit == 0 {
+		limit = 5
+	}
+	offset := (page - 1) * limit
+
+	//sort
+	sort := c.Query("sorting") //urutan naik/turun
 	if sort == "" {
 		sort = "ASC"
 	}
 
-	sortBy := c.Query("sortBy")
+	sortBy := c.Query("sortBy") //referensi urutan
 	if sortBy == "" {
 		sortBy = "name"
 	}
 
 	sort = sortBy + " " + strings.ToLower(sort)
 
+	//search
 	keyword := c.Query("search")
-	products := models.SelectAllProduct(sort, keyword)
-	return c.JSON(products)
+
+	//
+	products := models.SelectAllProduct(sort, keyword, limit, offset)
+	totalData := models.CountDataProducts()
+	totalPage := math.Ceil(float64(totalData) / float64(limit))
+	result := map[string]interface{}{
+		"data":        products,
+		"currentPage": page,
+		"limit":       limit,
+		"totalData":   totalData,
+		"totalPage":   totalPage,
+	}
+
+	return c.JSON(result)
 }
 
 // menampilkan 1 produk

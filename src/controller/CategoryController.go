@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gofiber_pijar/src/helpers"
 	"gofiber_pijar/src/models"
+	"math"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,24 @@ import (
 
 // menampilkan semua kategori
 func GetAllCategories(c *fiber.Ctx) error {
+
+	//pagination
+	pageParam := c.Query("page")
+	limitParam := c.Query("limit")
+
+	page, _ := strconv.Atoi(pageParam)
+	if page == 0 {
+		page = 1
+	}
+
+	limit, _ := strconv.Atoi(limitParam)
+	if limit == 0 {
+		limit = 5
+	}
+
+	offset := (page - 1) * limit
+
+	//sorting
 	sort := c.Query("sorting")
 	if sort == "" {
 		sort = "ASC"
@@ -26,8 +45,18 @@ func GetAllCategories(c *fiber.Ctx) error {
 	sort = sortBy + " " + strings.ToLower(sort)
 
 	keyword := c.Query("search")
-	categories := models.SelectAllCategory(sort, keyword)
-	return c.JSON(categories)
+	categories := models.SelectAllCategory(sort, keyword, limit, offset)
+	totalData := models.CountDataCategories()
+	totalPage := math.Ceil(float64(totalData) / float64(limit))
+	result := map[string]interface{}{
+		"data":        categories,
+		"currentPage": page,
+		"limit":       limit,
+		"totalData":   totalData,
+		"totalPage":   totalPage,
+	}
+
+	return c.JSON(result)
 }
 
 // menampilkan 1 kategori sesuai ID

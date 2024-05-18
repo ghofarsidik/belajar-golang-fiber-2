@@ -24,10 +24,10 @@ type Product struct {
 
 //preload buat ambil semua, select buat ambil beberapa
 
-func SelectAllProduct(sort, name string) []*Product {
+func SelectAllProduct(sort, name string, limit, offset int) []*Product {
 	var items []*Product
 	name = "%" + name + "%"
-	configs.DB.Preload("Category").Order(sort).Where("name ILIKE ?", name).Find(&items)
+	configs.DB.Preload("Category").Order(sort).Limit(limit).Offset(offset).Where("name ILIKE ?", name).Where("deleted_at IS NULL").Find(&items)
 	return items
 }
 
@@ -50,4 +50,10 @@ func UpdateProduct(id int, item *Product) error {
 func DeleteProduct(id int) error {
 	result := configs.DB.Delete(&Product{}, "id = ?", id)
 	return result.Error
+}
+
+func CountDataProducts() int64 {
+	var result int64
+	configs.DB.Table("products").Where("deleted_at IS NULL").Count(&result)
+	return result
 }

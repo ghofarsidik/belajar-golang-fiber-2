@@ -26,13 +26,13 @@ type APIProduct struct {
 	CategoryID  uint    `json:"category_id"`
 }
 
-func SelectAllCategory(sort, name string) []*Category {
+func SelectAllCategory(sort, name string, limit, offset int) []*Category {
 	var categories []*Category
 	name = "%" + name + "%"
 	configs.DB.Preload("Products", func(db *gorm.DB) *gorm.DB {
 		var items []*APIProduct
 		return db.Model(&Product{}).Find(&items)
-	}).Order(sort).Where("name ILIKE ?", name).Find(&categories)
+	}).Order(sort).Limit(limit).Offset(offset).Where("name ILIKE ?", name).Where("deleted_at IS NULL").Find(&categories)
 	return categories
 }
 
@@ -58,4 +58,10 @@ func UpdateCategory(id int, item *Category) error {
 func DeleteCategory(id int) error {
 	result := configs.DB.Delete(&Category{}, "id = ?", id)
 	return result.Error
+}
+
+func CountDataCategories() int64 {
+	var result int64
+	configs.DB.Table("categories").Where("deleted_at IS NULL").Count(&result)
+	return result
 }
