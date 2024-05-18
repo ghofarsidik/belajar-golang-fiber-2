@@ -32,7 +32,7 @@ func SelectAllCategory(name string) []*Category {
 	configs.DB.Preload("Products", func(db *gorm.DB) *gorm.DB {
 		var items []*APIProduct
 		return db.Model(&Product{}).Find(&items)
-	}).Where("name ILIKE ?", name).Find(&categories)
+	}).Where("category ILIKE ?", name).Find(&categories)
 	return categories
 }
 
