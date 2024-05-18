@@ -5,6 +5,7 @@ import (
 	"gofiber_pijar/src/helpers"
 	"gofiber_pijar/src/models"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mitchellh/mapstructure"
@@ -12,8 +13,20 @@ import (
 
 // menampilkan semua produk
 func GetAllProducts(c *fiber.Ctx) error {
+	sort := c.Query("sorting")
+	if sort == "" {
+		sort = "ASC"
+	}
+
+	sortBy := c.Query("sortBy")
+	if sortBy == "" {
+		sortBy = "name"
+	}
+
+	sort = sortBy + " " + strings.ToLower(sort)
+
 	keyword := c.Query("search")
-	products := models.SelectAllProduct(keyword)
+	products := models.SelectAllProduct(sort, keyword)
 	return c.JSON(products)
 }
 

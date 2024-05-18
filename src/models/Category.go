@@ -8,7 +8,7 @@ import (
 
 type Category struct {
 	gorm.Model
-	Category string       `json:"category" validate:"required,min=3,max=32"`
+	Name     string       `json:"name" validate:"required,min=3,max=32"`
 	Icon     string       `json:"icon"`
 	Products []APIProduct `json:"products"`
 }
@@ -26,13 +26,13 @@ type APIProduct struct {
 	CategoryID  uint    `json:"category_id"`
 }
 
-func SelectAllCategory(name string) []*Category {
+func SelectAllCategory(sort, name string) []*Category {
 	var categories []*Category
 	name = "%" + name + "%"
 	configs.DB.Preload("Products", func(db *gorm.DB) *gorm.DB {
 		var items []*APIProduct
 		return db.Model(&Product{}).Find(&items)
-	}).Where("category ILIKE ?", name).Find(&categories)
+	}).Order(sort).Where("name ILIKE ?", name).Find(&categories)
 	return categories
 }
 

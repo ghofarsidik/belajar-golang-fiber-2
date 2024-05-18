@@ -24,10 +24,10 @@ type Product struct {
 
 //preload buat ambil semua, select buat ambil beberapa
 
-func SelectAllProduct(name string) []*Product {
+func SelectAllProduct(sort, name string) []*Product {
 	var items []*Product
 	name = "%" + name + "%"
-	configs.DB.Preload("Category").Where("name ILIKE ?", name).Find(&items)
+	configs.DB.Preload("Category").Order(sort).Where("name ILIKE ?", name).Find(&items)
 	return items
 }
 
