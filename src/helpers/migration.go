@@ -6,5 +6,5 @@ import (
 )
 
 func Migration() {
-	configs.DB.AutoMigrate(&models.Product{})
+	configs.DB.AutoMigrate(&models.Product{}, &models.Profile{}, &models.Category{}, &models.User{})
 }

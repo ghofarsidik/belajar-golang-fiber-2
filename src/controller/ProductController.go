@@ -2,15 +2,18 @@ package controller
 
 import (
 	"fmt"
+	"gofiber_pijar/src/helpers"
 	"gofiber_pijar/src/models"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/mitchellh/mapstructure"
 )
 
 // menampilkan semua produk
 func GetAllProducts(c *fiber.Ctx) error {
-	products := models.SelectAllProduct()
+	keyword := c.Query("search")
+	products := models.SelectAllProduct(keyword)
 	return c.JSON(products)
 }
 
@@ -32,12 +35,23 @@ func GetProductById(c *fiber.Ctx) error {
 
 // // menambahkan produk
 func CreateProduct(c *fiber.Ctx) error {
-	var newProduct models.Product
-	if err := c.BodyParser(&newProduct); err != nil {
+	var rawNewProduct map[string]interface{}
+	if err := c.BodyParser(&rawNewProduct); err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
 		})
 		return err
+	}
+
+	//XSSmiddleware
+	rawNewProduct = helpers.XSSMiddleware(rawNewProduct)
+	var newProduct models.Product
+	mapstructure.Decode(rawNewProduct, &newProduct)
+
+	//validate
+	errors := helpers.ValidateStruct(newProduct)
+	if len(errors) > 0 {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
 	models.PostProduct(&newProduct)
@@ -52,16 +66,26 @@ func CreateProduct(c *fiber.Ctx) error {
 func UpdateProduct(c *fiber.Ctx) error {
 	id, _ := strconv.Atoi(c.Params("id"))
 
-	var updateProduct models.Product
-	if err := c.BodyParser(&updateProduct); err != nil {
+	var rawUpdateProduct map[string]interface{}
+	if err := c.BodyParser(&rawUpdateProduct); err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid Request Body",
 		})
 		return err
 	}
 
-	err := models.UpdateProduct(id, &updateProduct)
+	//XSSMiddleware
+	rawUpdateProduct = helpers.XSSMiddleware(rawUpdateProduct)
+	var updateProduct models.Product
+	mapstructure.Decode(rawUpdateProduct, &updateProduct)
 
+	//validate
+	errors := helpers.ValidateStruct(UpdateProduct)
+	if len(errors) > 0 {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+	}
+
+	err := models.UpdateProduct(id, &updateProduct)
 	if err == nil {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"message": fmt.Sprintf("Product with ID %d update successfully", id),

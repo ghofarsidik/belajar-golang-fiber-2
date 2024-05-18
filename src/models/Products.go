@@ -8,20 +8,32 @@ import (
 
 type Product struct {
 	gorm.Model
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
-	Stock int     `json:"stock"`
+	Name        string   `json:"name" validate:"required"`
+	Image       string   `json:"image" validate:"required"`
+	Brand       string   `json:"brand" validate:"required"`
+	Price       float64  `json:"price" validate:"required"`
+	Color       string   `json:"color" validate:"required"`
+	Size        uint     `json:"size" validate:"required"`
+	Stock       uint     `json:"stock" validate:"required"`
+	Condition   string   `json:"condition" validate:"required"`
+	Description string   `json:"description" validate:"required"`
+	Rating      float32  `json:"rating"`
+	CategoryId  uint     `json:"category_id"`
+	Category    Category `gorm:"foreignKey:CategoryId"`
 }
 
-func SelectAllProduct() []*Product {
+//preload buat ambil semua, select buat ambil beberapa
+
+func SelectAllProduct(name string) []*Product {
 	var items []*Product
-	configs.DB.Find(&items)
+	name = "%" + name + "%"
+	configs.DB.Preload("Category").Where("name ILIKE ?", name).Find(&items)
 	return items
 }
 
 func SelectProductByID(id int) *Product {
 	var item Product
-	configs.DB.First(&item, "id = ?", id)
+	configs.DB.Preload("Category").First(&item, "id = ?", id)
 	return &item
 }
 
