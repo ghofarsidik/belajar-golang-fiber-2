@@ -9,11 +9,15 @@ import (
 
 func Router(app *fiber.App) {
 	//product
-	app.Get("/products", controller.GetAllProducts)
+	app.Get("/products", middlewares.JwtMiddleware(), controller.GetAllProducts)
 	app.Get("/products/:id", controller.GetProductById)
 	app.Post("/product", controller.CreateProduct)
 	app.Put("/product/:id", controller.UpdateProduct)
 	app.Delete("/product/:id", controller.DeleteProduct)
+
+	//upload
+	app.Post("/upload", controller.UploadFile)
+	app.Post("/uploadServer", controller.UploadFileServer)
 
 	//Profiles
 	app.Get("/profiles", controller.GetAllProfiles)

@@ -5,8 +5,12 @@ go 1.22.2
 require github.com/gofiber/fiber/v2 v2.52.4
 
 require (
+	github.com/cloudinary/cloudinary-go v1.7.0 // indirect
+	github.com/creasty/defaults v1.5.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/goddtriffin/helmet v1.0.2 // indirect
+	github.com/gorilla/schema v1.2.0 // indirect
 )
 
 require (
